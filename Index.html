@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taking the Pulse of Mountains</title>
+
+  <style>
+    /* ----------------------------------------------------------
+       BASE
+    ---------------------------------------------------------- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 40px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    /* ----------------------------------------------------------
+       HERO (sticky background, messages scroll normally)
+    ---------------------------------------------------------- */
+    .hero {
+      position: relative;
+    }
+
+    .hero__bg {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: url("TPM_Hero.jpg") center/cover no-repeat;
+      z-index: 0;
+    }
+
+    .hero__bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.20);
+      pointer-events: none;
+    }
+
+    .hero-message {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      color: #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-big h1 {
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      font-size: clamp(2.6rem, 6.5vw, 4.2rem);
+      line-height: 1.05;
+      text-wrap: balance;
+    }
+
+    .hero-text p {
+      margin: 0;
+      font-weight: 650;
+      font-size: clamp(1.2rem, 3.2vw, 2rem);
+      line-height: 1.4;
+      text-wrap: balance;
+    }
+
+    /* Fade-in */
+    .hero-message > * {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 520ms ease, transform 520ms ease;
+    }
+    .hero-message.is-visible > * {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Fade-to-white */
+    .hero-fade {
+      position: sticky;
+      top: 0;
+      height: 30vh;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.7) 55%,
+        #ffffff 100%
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ----------------------------------------------------------
+       PROGRESS DOTS
+    ---------------------------------------------------------- */
+    .progress {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: opacity 240ms ease;
+    }
+
+    .progress.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .progress button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.25);
+      cursor: pointer;
+      padding: 0;
+      transition: 160ms ease;
+    }
+
+    .progress button[aria-current="true"] {
+      background: #fff;
+      border-color: #fff;
+      transform: scale(1.25);
+    }
+
+    /* ----------------------------------------------------------
+       MAIN SECTION
+    ---------------------------------------------------------- */
+    .sequence {
+      scroll-snap-type: y mandatory;
+    }
+
+    .sequence .panel {
+      min-height: 100vh;
+      background: white;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+      scroll-snap-align: start;
+      position: relative;   /* Needed for logo positioning */
+    }
+
+    .sequence h2 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      margin-bottom: 0.6em;
+    }
+
+    .sequence p {
+      text-align: left;
+      font-size: clamp(1rem, 2.2vw, 1.15rem);
+      line-height: 1.7;
+      margin: 0.6em 0;
+    }
+
+    /* ----------------------------------------------------------
+       PANEL LOGO (FIXED VERSION)
+    ---------------------------------------------------------- */
+    .panel-logo {
+      position: absolute;
+      top: 75px;
+      right: 75px;
+      width: 276px;     
+      height: 154px;
+      z-index: 10;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+	
+	/* ----------------------------------------------------------
+   PANEL HEADER AREA (fixed for logo overlap)
+---------------------------------------------------------- */
+.panel-header {
+  position: absolute;
+  top: 75px;
+  left: 0;
+  right: 75px;
+  height: 154px;
+  display: grid;
+  grid-template-columns: 1fr 300px; /* left content | right spacing */
+  align-items: center;
+  z-index: 20;
+  pointer-events: none; /* prevents blocking logo clicks */
+}
+
+/* Banner image stays left */
+.panel-banner {
+  height: 100%;
+  background: url("TPM_Banner.jpg") center/cover no-repeat;
+  position: relative;
+  pointer-events: none;
+}
+
+/* Fade on the left of the banner */
+.panel-banner::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  background: linear-gradient(
+    to left,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,1) 100%
+  );
+}
+
+/* Hamburger button (set to allow clicking) */
+.panel-menu {
+  position: absolute;
+  left: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 2.1rem;
+  cursor: pointer;
+  color: #333;
+  z-index: 25;
+  opacity: 0.85;
+  transition: opacity 180ms ease;
+  pointer-events: auto; /* important */
+}
+
+.panel-menu:hover {
+  opacity: 1;
+}
+
+.panel .wrap {
+  padding-top: 180px; /* adjust as needed */
+}
+
+    /* ----------------------------------------------------------
+       SLIDE-IN MENU
+    ---------------------------------------------------------- */
+    .slide-menu {
+      position: fixed;
+      top: 0;
+      left: -280px; /* hidden by default */
+      width: 260px;
+      height: 100vh;
+      background: #ffffffee;
+      backdrop-filter: blur(4px);
+      box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+      padding: 60px 20px;
+      z-index: 999;
+      transition: left 280ms ease;
+    }
+
+    .slide-menu.open {
+      left: 0;
+    }
+
+    .slide-menu h3 {
+      margin-top: 0;
+      font-size: 1.25rem;
+    }
+
+    .slide-menu ul {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0;
+    }
+
+    .slide-menu li {
+      margin: 14px 0;
+    }
+
+    .slide-menu a {
+      text-decoration: none;
+      color: #111;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .slide-menu a:hover {
+      text-decoration: underline;
+    }
+
+/* ----------------------------------------------------------
+   CONTACT CARDS
+---------------------------------------------------------- */
+.contact-cards {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.contact-card {
+  text-align: center;
+  width: 240px;
+}
+
+.contact-card img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;      /* keeps photo shape consistent */
+  border-radius: 10px;     /* or 50% for circular photos */
+  margin-bottom: 12px;
+}
+
+.contact-card h4 {
+  margin: 6px 0;
+  font-size: 1.2rem;
+}
+
+.contact-card p {
+  margin: 0;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Smaller text for Impressum/legal info */
+.legal-block {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.92;
+  margin-top: 20px;
+}
+
+/* Force smaller paragraphs in the legal block */
+.legal-block p {
+  font-size: 0.9rem !important;
+  line-height: 1.5;
+}
+
+.legal-block h3 {
+  font-size: 1.05rem;
+  margin-top: 24px;
+  margin-bottom: 6px;
+}
+
+.panel-image {
+  margin-top: 30px;
+}
+
+/* ----------------------------------------------------------
+   PUBLICATIONS
+---------------------------------------------------------- */
+.pub-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pub-item {
+  /* Hanging indent: first line flush, following lines indented */
+  padding-left: 1.4em;       /* space for the "invisible bullet" */
+  text-indent: -1.4em;       /* pull first line back */
+  margin: 0.6em 0 0.9em;     /* vertical rhythm */
+  line-height: 1.6;
+}
+
+.pub-authors {
+  font-variant-numeric: oldstyle-nums;
+}
+
+/*.pub-title {
+  font-style: italic;         /* common in many citation styles */
+}*/
+
+.pub-journal {
+  font-style: italic;
+} 
+
+.pub-volume {
+  font-weight: 600;
+}
+
+.pub-doi {
+  display: inline-block;
+  margin-left: 0.5em;
+  color: #0a66c2;             /* accessible blue */
+  text-decoration: none;
+  word-break: break-word;     /* prevents overflow on mobile */
+}
+.pub-doi:hover {
+  text-decoration: underline;
+}
+
+/* Optional subtle separator (uncomment if desired) */
+
+.pub-item + .pub-item {
+  border-top: 1px solid #eee;
+  padding-top: 0.9em;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ======================================================
+       HERO
+  ====================================================== -->
+  <section class="hero">
+
+    <div class="hero__bg"></div>
+
+    <div class="hero-message hero-big">
+      <div class="wrap"><h1>Cold Fading.</h1></div>
+    </div>
+
+    <div class="hero-message hero-big">
+      <div class="wrap"><h1>Life Narrowing.</h1></div>
+    </div>
+
+    <div class="hero-message hero-big">
+      <div class="wrap"><h1>Mountains Warning.</h1></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <div class="wrap"><p><strong>Up here, the cold once shaped everything. 
+      Now the mountains are warming faster than the valleys below, reshuffling 
+      snow, water, and life itself. </strong></p></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <div class="wrap"><p><strong>Alpine ecosystems are simple by design — few 
+      species, delicate balances, narrow margins. That simplicity is their beauty, 
+      and their weakness. </strong></p></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <div class="wrap"><p><strong>Yet within this simplicity lies surprising richness: 
+      the rugged topography fractures the landscape into various microhabitats creating high 
+      ecological diversity over very short distances.</strong></p></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <div class="wrap"><p><strong>As the climate warms, species climb toward the sky 
+      until the ridgelines stop them. Some may disappear as their world shrinks and 
+      they run out of mountain. </strong></p></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <div class="wrap"><p><strong>The mountains are changing — and they are telling us what’s coming.</strong></p></div>
+    </div>
+
+    <div class="hero-message hero-text">
+      <img src="TPM_Logo2.png">
+    </div>
+
+    <div class="hero-fade"></div>
+  </section>
+
+  <nav class="progress"></nav>
+
+  <!-- ======================================================
+       MAIN SECTION WITH FIXED LOGO
+  ====================================================== -->
+  <section class="sequence">
+  
+  <nav class="slide-menu" id="slideMenu">
+  <h3>Sections</h3>
+  <ul id="slideMenuList"></ul>
+</nav>
+
+    <div class="panel">
+      <img class="panel-logo" src="TPM_Logo.png">
+	<div class="panel-header">
+	  <div class="panel-banner"></div>
+      <button class="panel-menu" aria-label="Open navigation">☰</button>
+    </div>
+      <div class="wrap">
+        <h2>The Project's Rationale & Objectives</h2>
+        <p>In Norway, vast stretches of the country rise into the alpine zone — 
+        home to many specialised and threatened species and nature types. These 
+        high mountains form some of our most climate sensitive environments, 
+        giving us a special responsibility to understand, protect, and restore 
+        them as change accelerates.</p>
+        <p>What started in winter 2008 as a monitoring of reindeer's habitat use
+		and pasture resources, evolved over the years into a full-scale monitoring of 
+		the alpine landscape and treeline at Filefjell, located in south-central Norway.</p> 
+		<p>Using Filefjell as an example, we seek to </p> 
+		<p style="text-align:center;"><strong>i) understand current (sub)alpine ecosystem functioning and </strong></p>
+		<p style="text-align:center;"><strong>ii) to track changes in ecological patterns and processes over time.</strong></p>
+      </div>
+    </div>
+	
+	<div class="panel">
+      <img class="panel-logo" src="TPM_Logo.png">
+	<div class="panel-header">
+	  <div class="panel-banner"></div>
+      <button class="panel-menu" aria-label="Open navigation">☰</button>
+    </div>	  
+      <div class="wrap">
+      <h2>Study Design</h2>
+        <p>The monitoring program covers both tree line and - evenly distributed 
+        across the low and middle alpine belt above tree line - topographical 
+        gradients from the hilltops into snowbeds. Here, we conduct remote sensing 
+		(from drone to satellite) aided vegetation and snowcover mapping, have established 
+		permanent vegetation plots, monitor near-surface temperature conditions, 
+		conduct climate-growth analyses of woody species based on dendroecology, and 
+		look into the properties and characteristics of alpine soils.</p>
+
+	<img src="TPM_Design.png" alt="Project design" width=500px class="panel-image">
+      </div>
+    </div>
+	
+	    <div class="panel">
+      <img class="panel-logo" src="TPM_Logo.png"> 
+	  	<div class="panel-header">
+	  <div class="panel-banner"></div>
+      <button class="panel-menu" aria-label="Open navigation">☰</button>
+    </div>
+      <div class="wrap">
+      <h2>Related Publications</h2>
+        
+        <ul class="pub-list">
+		<li class="pub-item">
+           <span class="pub-authors">Albrecht, E. C., Dobbert, S., Keturka, K., Kühnapfel, M., Francon, L., Pape, R. Wundram, D. & Löffler, J. </span> (2024).
+           <span class="pub-title">Annual Ring Widths in the Arctic-Alpine Dwarf-Shrub Species <i>Betula nana</i> - Dataset from Long-Term Alpine Ecosystem Research in Central Norway (LTAER-NO).</span>
+           <span class="pub-journal">Erdkunde</span>, <span class="pub-volume">78</span>, DP311206<br>
+           <a class="pub-doi" href="https://doi.org/10.3112/erkunde.2024/dp01" target="_blank">DOI: 10.3112/erkunde.2024/dp01</a>
+		 </li> 
+		<li class="pub-item">
+           <span class="pub-authors">Holtan, M., Strand, O., Kastdalen, L., Bjerketvedt, D. K., Odland, A., Pape, R. & Heggenes, J.</span> (2023).
+           <span class="pub-title">Wild Mountain reindeer <i>Rangifer tarandus tarandus</i> winter foraging: snow-free areas a key resource for feeding</span>
+           <span class="pub-journal">Polar Biology</span>, <span class="pub-volume">46</span>, 1321–1334.<br>
+           <a class="pub-doi" href="https://doi.org/10.1007/s00300-023-03204-x" target="_blank">DOI: 10.1007/s00300-023-03204-x</a>
+		 </li>  
+		 <li class="pub-item">
+           <span class="pub-authors">Dobbert, S., Pape, R. & Löffler, J.</span> (2022).
+           <span class="pub-title">The Application of Dendrometers to Alpine Dwarf Shrubs—A Case Study to Investigate Stem Growth Responses to Environmental Conditions.</span>
+           <span class="pub-journal">Biogeosciences</span>, <span class="pub-volume">19</span>, 933–1958.<br>
+           <a class="pub-doi" href="https://doi.org/10.5194/bg-19-1933-2022" target="_blank">DOI: 10.5194/bg-19-1933-2022</a>
+		 </li>  
+         <li class="pub-item">
+           <span class="pub-authors">Löffler, J. &amp; Pape, R.</span> (2020).
+           <span class="pub-title">Thermal Niche Predictors of Alpine Plant Species.</span>
+           <span class="pub-journal">Ecology</span>, <span class="pub-volume">101</span>, e02891.<br>
+           <a class="pub-doi" href="https://doi.org/10.1002/ecy.2891" target="_blank">DOI: 10.1002/ecy.2891</a>
+		 </li>  
+		 <li class="pub-item">
+           <span class="pub-authors">Pape, R. &amp; Löffler, J.</span> (2017).
+           <span class="pub-title">Determinants of Arctic-Alpine Pasture Resources—The Need for a Spatially and Functionally Fine-Scaled Perspective.</span>
+           <span class="pub-journal">Geografiska Annaler: Series A, Physical Geography</span>, <span class="pub-volume">99</span>, 353–370.<br>
+           <a class="pub-doi" href="https://doi.org/10.1080/04353676.2017.1368833" target="_blank">DOI: 10.1080/04353676.2017.1368833</a>
+		 </li> 
+		 <li class="pub-item">
+           <span class="pub-authors">Pape, R. &amp; Löffler, J.</span> (2015).
+           <span class="pub-title">Seasonality of Habitat Selection Shown to Buffer Alpine Reindeer Pastoralism Against Climate Variability.</span>
+           <span class="pub-journal">Ecosphere</span>, <span class="pub-volume">6</span>, 260.<br>
+           <a class="pub-doi" href="http://dx.doi.org/10.1890/ES15-00169.1" target="_blank">DOI: 10.1890/ES15-00169.1</a>
+		 </li> 		 
+		</ul>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <img class="panel-logo" src="TPM_Logo.png"> 
+	  	<div class="panel-header">
+	  <div class="panel-banner"></div>
+      <button class="panel-menu" aria-label="Open navigation">☰</button>
+    </div>
+      <div class="wrap">
+      <h2>Acknowledgements</h2>
+        <p>We would like to thank</p>
+		<p>Prof. em. Anders Lundberg (University of Bergen) and 
+        Prof. J. Löffler (University of Bonn, Germany) for their general support and 
+		scientific discussions,</p>
+		<p>Sigrid Nystuen and Ola Rusto on behalf of the land owners
+		for logistics and hospitality,</p>
+        <p>and Knut H. Maristuen and the other members of 
+        <a href="https://www.filefjell-reinlag.no/">Filefjell Reinlag</a> for their collaboration, hospitality, and continuous support.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <img class="panel-logo" src="TPM_Logo.png"> 
+	  <div class="panel-header">
+	  <div class="panel-banner"></div>
+      <button class="panel-menu" aria-label="Open navigation">☰</button>
+    </div>
+      <div class="wrap">
+        <h2>Contact & Impressum</h2>
+		<!-- CONTACT CARDS -->
+		<div class="contact-cards">
+          <div class="contact-card">
+            <img src="Roland.jpg" alt="Roland Pape">
+            <a href="https://www.usn.no/employees/roland-pape-article227588-7531.html"><h4>Assoc. Prof. Roland Pape</h4></a>
+            <p>roland.pape [at] usn.no</p>
+        </div>
+
+        <div class="contact-card">
+          <img src="Barbara2.jpg" alt="Barbara Schmid">
+		  <h4>Barbara Schmid (phd)</h4>
+          <p>barbara.schmid [at] mail.de</p>
+        </div>
+      </div>
+      <div class="legal-block">
+	  <!-- RESPONSIBLE FOR CONTENT -->
+	  	  <h3>Responsible for Content & Web Design</h3>
+          <p>Associate Professor Dr. habil. Roland Pape<br>
+          University of South-Eastern Norway<br>
+          roland.pape [at] usn.no
+          </p>
+		  
+      <!-- COPYRIGHT -->
+      <h3>Copyright</h3>
+      <p>Unless otherwise stated, all images, text, and graphics are © Taking the Pulse of Mountains / Pape & Schmid, 2026.
+      </p>
+	  
+	  
+      <!-- LEGAL NOTICE -->
+      <h3>Legal Notice</h3>
+      <p>
+      This website does not use analytics, cookies, or tracking scripts.<br>
+      External links are provided for convenience; responsibility for external content lies with their respective owners.
+      </p>
+      </div>
+
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================
+       JS (fade + progress dots)
+  ====================================================== -->
+  <script>
+    const heroMessages = Array.from(document.querySelectorAll('.hero-message'));
+
+    const heroObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('is-visible');
+      });
+    }, { threshold: 0.45 });
+
+    heroMessages.forEach(m => heroObserver.observe(m));
+
+    const progress = document.querySelector('.progress');
+    heroMessages.forEach((_, idx) => {
+      const btn = document.createElement('button');
+      btn.dataset.index = idx;
+      btn.addEventListener('click', () =>
+        heroMessages[idx].scrollIntoView({ behavior: 'smooth' })
+      );
+      progress.appendChild(btn);
+    });
+
+    const dots = Array.from(progress.querySelectorAll('button'));
+
+    const activeObserver = new IntersectionObserver((entries) => {
+      let best = null, bestRatio = 0;
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio > bestRatio) {
+          best = e.target; bestRatio = e.intersectionRatio;
+        }
+      });
+      if (best) {
+        const idx = heroMessages.indexOf(best);
+        dots.forEach((d, i) =>
+          d.setAttribute('aria-current', i === idx ? 'true' : 'false')
+        );
+      }
+    }, { threshold: [0.25, 0.5, 0.75] });
+
+    heroMessages.forEach(m => activeObserver.observe(m));
+
+    const mainFirst = document.querySelector('.sequence .panel');
+    const hideObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) progress.classList.add('hide');
+        else progress.classList.remove('hide');
+      });
+    }, { threshold: 0.1 });
+
+    hideObserver.observe(mainFirst);
+
+    if (dots[0]) dots[0].setAttribute('aria-current', 'true');
+  </script>
+  
+  <script>
+  /* -------------------------------------------
+     BUILD SLIDE-IN MENU FROM PANEL HEADINGS
+  ------------------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+
+  const slideMenu = document.getElementById("slideMenu");
+  const menuList = document.getElementById("slideMenuList");
+  menuList.innerHTML = "";
+  const menuButtons = document.querySelectorAll(".panel-menu");
+  const panels = Array.from(document.querySelectorAll(".panel"));
+
+  // Build menu
+  panels.forEach(panel => {
+    const h2 = panel.querySelector("h2");
+    if (!h2) return;
+
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+
+    a.textContent = h2.textContent;
+    a.href = "#";
+    a.addEventListener("click", e => {
+      e.preventDefault();
+      panel.scrollIntoView({ behavior: "smooth" });
+      slideMenu.classList.remove("open");
+    });
+
+    li.appendChild(a);
+    menuList.appendChild(li);
+  });
+
+  // Open menu
+  menuButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      slideMenu.classList.add("open");
+    });
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", e => {
+    if (!slideMenu.contains(e.target) && !e.target.classList.contains("panel-menu")) {
+      slideMenu.classList.remove("open");
+    }
+  });
+
+  // Close with ESC
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") slideMenu.classList.remove("open");
+  });
+
+});
+
+
+  const menuList = document.getElementById("slideMenuList");
+  const menuButtons = document.querySelectorAll(".panel-menu");
+  const panels = Array.from(document.querySelectorAll(".panel"));
+
+  // Extract headings and create menu items
+  panels.forEach((panel, idx) => {
+    const h2 = panel.querySelector("h2");
+    if (!h2) return;
+
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+
+    a.textContent = h2.textContent;
+    a.href = "#"; // JS handles scroll
+    a.addEventListener("click", e => {
+      e.preventDefault();
+      panel.scrollIntoView({ behavior: "smooth" });
+      slideMenu.classList.remove("open");
+    });
+
+    li.appendChild(a);
+    menuList.appendChild(li);
+  });
+
+  // Open the menu from any panel's hamburger
+  menuButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      slideMenu.classList.add("open");
+    });
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!slideMenu.contains(e.target) && !e.target.classList.contains("panel-menu")) {
+      slideMenu.classList.remove("open");
+    }
+  });
+
+  // Optional: ESC to close
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") slideMenu.classList.remove("open");
+  });
+</script>
+</body>
+</html>
