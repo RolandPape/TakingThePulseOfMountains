@@ -84,12 +84,14 @@
 }
 
 /* LOGO */
+
 .hero-logo {
-  max-width: min(60%, 300px);
+  width: clamp(180px, 60vw, 600px);
   height: auto;
-  margin: 0 auto;
   display: block;
+  margin: 0 auto;
 }
+
     /* ----------------------------------------------------------
        PROGRESS DOTS
     ---------------------------------------------------------- */
@@ -130,6 +132,18 @@
     /* ----------------------------------------------------------
        MAIN SECTION
     ---------------------------------------------------------- */
+	
+	:root {
+  /* Tune these to taste */
+  --header-top: clamp(24px, 5vw, 60px);
+  --header-h: clamp(72px, 12vw, 160px);
+  --pad-x: clamp(12px, 2.2vw, 40px);
+
+  /* Scales the hamburger and fade width */
+  --menu-size: clamp(28px, 4.6vw, 44px);
+  --fade-w: clamp(160px, 18vw, 360px);
+}
+	
     .sequence {
       scroll-snap-type: y mandatory;
     }
@@ -158,82 +172,81 @@
       margin: 0.6em 0;
     }
 
-    /* ----------------------------------------------------------
-       PANEL LOGO (FIXED VERSION)
-    ---------------------------------------------------------- */
-    .panel-logo {
-      position: absolute;
-      top: 75px;
-      right: 75px;
-      width: 276px;     
-      height: 154px;
-      z-index: 10;
-      opacity: 0.75;
-      pointer-events: none;
-    }
-	
-	/* ----------------------------------------------------------
-   PANEL HEADER AREA (fixed for logo overlap)
----------------------------------------------------------- */
+ /* ---------------------------------------------
+   PANEL HEADER — responsive, with overlay menu
+--------------------------------------------- */
+
 .panel-header {
   position: absolute;
-  top: 75px;
+  top: var(--header-top);
   left: 0;
-  right: 75px;
-  height: 154px;
-  display: grid;
-  grid-template-columns: 1fr 300px; /* left content | right spacing */
+  right: 0;
+  height: var(--header-h);
+  padding: 0 var(--pad-x);
+  display: flex;
   align-items: center;
+  gap: clamp(8px, 2vw, 24px);
   z-index: 20;
-  pointer-events: none; /* prevents blocking logo clicks */
+  pointer-events: none; /* keep non-interactive except menu */
 }
 
-/* Banner image stays left */
-.panel-banner {
-  height: 100%;
-  background: url("TPM_Banner.jpg") center/cover no-repeat;
-  position: relative;
-  pointer-events: none;
-}
-
-/* Fade on the left of the banner */
-.panel-banner::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 260px;
-  background: linear-gradient(
-    to left,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,1) 100%
-  );
-}
-
-/* Hamburger button (set to allow clicking) */
+/* Hamburger: take it out of layout and pin on top of banner */
 .panel-menu {
   position: absolute;
-  left: 25px;
+  left: var(--pad-x);
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 2.1rem;
+  font-size: calc(var(--menu-size) * 0.9);
+  inline-size: var(--menu-size);
+  block-size: var(--menu-size);
   cursor: pointer;
-  color: #333;
   z-index: 25;
-  opacity: 0.85;
-  transition: opacity 180ms ease;
-  pointer-events: auto; /* important */
+  pointer-events: auto; /* clickable despite header pointer-events:none */
 }
 
-.panel-menu:hover {
-  opacity: 1;
+/* Banner fills all remaining space to the left of the logo */
+.panel-banner {
+  flex: 1 1 auto;
+  height: 100%;
+  position: relative;
+  overflow: hidden;                  /* crop when object covers */
+  isolation: isolate;                /* ensure predictable stacking */
+  /* This is the key: “zoom to cover” so it fills the area */
+  background: url("TPM_Banner.jpg") center / cover no-repeat;
 }
 
+/* Persistent fade from white (left) into the banner */
+.panel-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;                          /* full overlay */
+  background: linear-gradient(
+    to right,
+    white 0%,
+    rgba(255,255,255,0.85) 8%,
+    rgba(255,255,255,0.35) 16%,
+    rgba(255,255,255,0) 26%
+  );
+  pointer-events: none;
+  z-index: 1;                        /* above image, below hamburger */
+}
+
+/* Logo: scales with header height & viewport, stays crisp */
+.panel-logo {
+  height: 100%;                      /* ties to header height */
+  width: auto;
+  max-width: clamp(140px, 22vw, 360px);
+  max-height: 100%;
+  flex: 0 0 auto;                    /* don’t let it stretch */
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Ensure panel content sits below header */
 .panel .wrap {
-  padding-top: 180px; /* adjust as needed */
+  padding-top: calc(var(--header-top) + var(--header-h) + 20px);
 }
 
     /* ----------------------------------------------------------
@@ -339,6 +352,11 @@
 
 .panel-image {
   margin-top: 30px;
+  max-width: 100%;    /* scale down to fit container */
+  height: auto;       /* preserve aspect ratio */
+  display: block;     /* avoids inline spacing issues */
+  margin-left: auto;  /* center horizontally */
+  margin-right: auto;
 }
 
 /* ----------------------------------------------------------
@@ -392,43 +410,12 @@
   padding-top: 0.9em;
 }
 
-/* ---------------------------------------
-   MOBILE FIXES FOR PANEL LOGO + HEADER
----------------------------------------- */
-@media (max-width: 800px) {
-
-  .panel-logo {
-    top: 20px;
-    right: 20px;
-    width: 35vw;        /* scales with screen width */
-    height: auto;
-    opacity: 0.85;
-  }
-
-  .panel-header {
-    top: 20px;
-    right: 0;
-    left: 0;
-    height: auto;
-    grid-template-columns: 1fr auto;
-    padding-right: 35vw; /* avoid overlapping the logo */
-  }
-
-  .panel-banner {
-    height: 60px;       /* keep small but visible on mobile */
-    background-size: cover;
-  }
-
-  /* Optional: shrink the hamburger menu for mobile */
-  .panel-menu {
-    font-size: 1.6rem;
-    left: 16px;
-  }
-
-  /* Prevent the main content from hiding behind header */
+/* Mobile version */
+@media (max-width: 750px) {
   .panel .wrap {
-    padding-top: 120px;
+    padding-top: calc(var(--header-top) + var(--header-h) + 12px);
   }
+  /* You can keep .panel-menu font-size as is; it already clamps */
 }
 
   </style>
@@ -495,7 +482,7 @@
 
     <!-- Large logo -->
     <div class="hero-message hero-text">
-      <img src=TPM_Logo2.png>
+      <img src=TPM_Logo2.png class="hero-logo">
     </div>
 
   </div>
@@ -515,11 +502,12 @@
 </nav>
 
     <div class="panel">
-      <img class="panel-logo" src="TPM_Logo.png">
-	<div class="panel-header">
-	  <div class="panel-banner"></div>
-      <button class="panel-menu" aria-label="Open navigation">☰</button>
-    </div>
+      <div class="panel-header">
+	    <button class="panel-menu" aria-label="Open navigation">☰</button>
+	    <div class="panel-banner"></div>
+		<img class="panel-logo" src="TPM_Logo.png">
+	     
+      </div>
       <div class="wrap">
         <h2>The Project's Rationale & Objectives</h2>
         <p>In Norway, vast stretches of the country rise into the alpine zone — 
@@ -536,12 +524,13 @@
       </div>
     </div>
 	
-	<div class="panel">
-      <img class="panel-logo" src="TPM_Logo.png">
-	<div class="panel-header">
-	  <div class="panel-banner"></div>
-      <button class="panel-menu" aria-label="Open navigation">☰</button>
-    </div>	  
+    <div class="panel">
+      <div class="panel-header">
+	    <button class="panel-menu" aria-label="Open navigation">☰</button>
+	    <div class="panel-banner"></div>
+		<img class="panel-logo" src="TPM_Logo.png">
+	     
+      </div>  
       <div class="wrap">
       <h2>Study Design</h2>
         <p>The monitoring program covers both tree line and - evenly distributed 
@@ -552,16 +541,17 @@
 		conduct climate-growth analyses of woody species based on dendroecology, and 
 		look into the properties and characteristics of alpine soils.</p>
 
-	<img src="TPM_Design.png" alt="Project design" width=500px class="panel-image">
+	<img src="TPM_Design.png" alt="Project design" class="panel-image">
       </div>
     </div>
 	
-	    <div class="panel">
-      <img class="panel-logo" src="TPM_Logo.png"> 
-	  	<div class="panel-header">
-	  <div class="panel-banner"></div>
-      <button class="panel-menu" aria-label="Open navigation">☰</button>
-    </div>
+    <div class="panel">
+      <div class="panel-header">
+	    <button class="panel-menu" aria-label="Open navigation">☰</button>
+	    <div class="panel-banner"></div>
+		<img class="panel-logo" src="TPM_Logo.png">
+	     
+      </div>
       <div class="wrap">
       <h2>Related Publications</h2>
         
@@ -608,37 +598,41 @@
     </div>
 
     <div class="panel">
-      <img class="panel-logo" src="TPM_Logo.png"> 
-	  	<div class="panel-header">
-	  <div class="panel-banner"></div>
-      <button class="panel-menu" aria-label="Open navigation">☰</button>
-    </div>
+      <div class="panel-header">
+	    <button class="panel-menu" aria-label="Open navigation">☰</button>
+	    <div class="panel-banner"></div>
+		<img class="panel-logo" src="TPM_Logo.png">
+	     
+      </div>
       <div class="wrap">
       <h2>Acknowledgements</h2>
         <p>We would like to thank</p>
-		<p>Prof. em. Anders Lundberg (University of Bergen) and 
-        Prof. J. Löffler (University of Bonn, Germany) for their general support and 
+		<p>Prof. em. Anders Lundberg (University of Bergen, Norway), 
+		<a href="https://www.sobi.uni-passau.de/en/geography-section/team/prof-dr-christine-schmitt target="_blank">Prof. Dr. Christine Schmitt (University of Passau, Germany)</a>, and 
+        <a href="https://www.geographie.uni-bonn.de/de/forschung/arbeitsgruppen/ag-loeffler/people/joerg-loeffler" target="_blank">Prof. Dr. J. Löffler (University of Bonn, Germany)</a> for their general support and 
 		scientific discussions,</p>
 		<p>Sigrid Nystuen and Ola Rusto on behalf of the land owners
 		for logistics and hospitality,</p>
         <p>and Knut H. Maristuen and the other members of 
-        <a href="https://www.filefjell-reinlag.no/">Filefjell Reinlag</a> for their collaboration, hospitality, and continuous support.</p>
+        <a href="https://www.filefjell-reinlag.no/" target="_blank"><i>Filefjell Reinlag</i></a> for their collaboration, hospitality, and continuous support.</p>
+		<p> The financial support obtained from <a href="https://nansenfondet.no/" target="_blank"><i>The Nansen Fund and Its Affiliated Funds</i></a> is greatly appreciated.</p>
       </div>
     </div>
 
     <div class="panel">
-      <img class="panel-logo" src="TPM_Logo.png"> 
-	  <div class="panel-header">
-	  <div class="panel-banner"></div>
-      <button class="panel-menu" aria-label="Open navigation">☰</button>
-    </div>
+      <div class="panel-header">
+	    <button class="panel-menu" aria-label="Open navigation">☰</button>
+	    <div class="panel-banner"></div>
+		<img class="panel-logo" src="TPM_Logo.png">
+	     
+      </div>
       <div class="wrap">
         <h2>Contact & Impressum</h2>
 		<!-- CONTACT CARDS -->
 		<div class="contact-cards">
           <div class="contact-card">
             <img src="Roland.jpg" alt="Roland Pape">
-            <a href="https://www.usn.no/employees/roland-pape-article227588-7531.html"><h4>Assoc. Prof. Roland Pape</h4></a>
+            <a href="https://www.usn.no/employees/roland-pape-article227588-7531.html" target="_blank"><h4>Assoc. Prof. Roland Pape</h4></a>
             <p>roland.pape [at] usn.no</p>
         </div>
 
