@@ -203,8 +203,18 @@
   block-size: var(--menu-size);
   cursor: pointer;
   z-index: 25;
+  color: rgba(0,0,0,0.55);
+  opacity: 0.7;
+  transition: opacity 200ms ease, color 200ms ease;
+
   pointer-events: auto; /* clickable despite header pointer-events:none */
 }
+
+.panel-menu:hover {
+  opacity: 1;
+  color: rgba(0,0,0,0.9);
+}
+
 
 /* Banner fills all remaining space to the left of the logo */
 .panel-banner {
