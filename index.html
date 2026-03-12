@@ -12,8 +12,9 @@
     html, body {
       margin: 0;
       padding: 0;
+	  overflow-x: hidden;
       font-family: Arial, sans-serif;
-      background: #fff;
+      background: transparent;
       color: #111;
     }
 
@@ -25,84 +26,70 @@
       text-align: center;
     }
 
-    /* ----------------------------------------------------------
-       HERO (sticky background, messages scroll normally)
-    ---------------------------------------------------------- */
-    .hero {
-      position: relative;
-    }
+/* ---------------------------------------------
+   HERO SECTION
+--------------------------------------------- */
 
-    .hero__bg {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      background: url("TPM_Hero.jpg") center/cover no-repeat;
-      z-index: 0;
-    }
+.hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
 
-    .hero__bg::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.20);
-      pointer-events: none;
-    }
+/* FIXED BACKGROUND — never scrolls away */
+.hero-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url("TPM_Hero.jpg") center/cover no-repeat;
+  z-index: -1; /* behind everything */
+}
 
-    .hero-message {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px;
-      color: #fff;
-      position: relative;
-      z-index: 1;
-    }
+/* SCROLLING CONTENT */
+.hero-content {
+  position: relative;
+  z-index: 10;
+}
 
-    .hero-big h1 {
-      margin: 0;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      font-size: clamp(2.6rem, 6.5vw, 4.2rem);
-      line-height: 1.05;
-      text-wrap: balance;
-    }
+.hero-blank {
+  background: none; /* transparent so you only see the hero image */
+}
 
-    .hero-text p {
-      margin: 0;
-      font-weight: 650;
-      font-size: clamp(1.2rem, 3.2vw, 2rem);
-      line-height: 1.4;
-      text-wrap: balance;
-    }
+/* EACH MESSAGE = FULL SCREEN */
+.hero-message {
+  min-height: 100dvh; /* mobile safe */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: white;
+}
 
-    /* Fade-in */
-    .hero-message > * {
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 520ms ease, transform 520ms ease;
-    }
-    .hero-message.is-visible > * {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.hero-big h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+}
 
-    /* Fade-to-white */
-    .hero-fade {
-      position: sticky;
-      top: 0;
-      height: 30vh;
-      background: linear-gradient(
-        to bottom,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.7) 55%,
-        #ffffff 100%
-      );
-      z-index: 2;
-      pointer-events: none;
-    }
+.hero-text p {
+  margin: 0 auto;
+  padding-left: clamp(20px, 10vw, 100px);
+  padding-right: clamp(20px, 10vw, 100px);
+  font-weight: 650;
+  font-size: clamp(1.2rem, 3.0vw, 2.0rem);
+  line-height: 1.4;
+  text-wrap: balance;
+}
 
+/* LOGO */
+.hero-logo {
+  max-width: min(60%, 300px);
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}
     /* ----------------------------------------------------------
        PROGRESS DOTS
     ---------------------------------------------------------- */
@@ -405,6 +392,45 @@
   padding-top: 0.9em;
 }
 
+/* ---------------------------------------
+   MOBILE FIXES FOR PANEL LOGO + HEADER
+---------------------------------------- */
+@media (max-width: 800px) {
+
+  .panel-logo {
+    top: 20px;
+    right: 20px;
+    width: 35vw;        /* scales with screen width */
+    height: auto;
+    opacity: 0.85;
+  }
+
+  .panel-header {
+    top: 20px;
+    right: 0;
+    left: 0;
+    height: auto;
+    grid-template-columns: 1fr auto;
+    padding-right: 35vw; /* avoid overlapping the logo */
+  }
+
+  .panel-banner {
+    height: 60px;       /* keep small but visible on mobile */
+    background-size: cover;
+  }
+
+  /* Optional: shrink the hamburger menu for mobile */
+  .panel-menu {
+    font-size: 1.6rem;
+    left: 16px;
+  }
+
+  /* Prevent the main content from hiding behind header */
+  .panel .wrap {
+    padding-top: 120px;
+  }
+}
+
   </style>
 </head>
 
@@ -415,54 +441,66 @@
   ====================================================== -->
   <section class="hero">
 
-    <div class="hero__bg"></div>
+  <!-- Fixed background image -->
+  <div class="hero-bg"></div>
+
+  <!-- Scrolling messages container -->
+  <div class="hero-content">
+  
+    <div class="hero-message hero-blank"></div>
 
     <div class="hero-message hero-big">
-      <div class="wrap"><h1>Cold Fading.</h1></div>
+      <h1>Cold Fading.</h1>
     </div>
 
     <div class="hero-message hero-big">
-      <div class="wrap"><h1>Life Narrowing.</h1></div>
+      <h1>Life Narrowing.</h1>
     </div>
 
     <div class="hero-message hero-big">
-      <div class="wrap"><h1>Mountains Warning.</h1></div>
+      <h1>Mountains Warning.</h1>
     </div>
 
     <div class="hero-message hero-text">
-      <div class="wrap"><p><strong>Up here, the cold once shaped everything. 
-      Now the mountains are warming faster than the valleys below, reshuffling 
-      snow, water, and life itself. </strong></p></div>
+      <p><strong>Up here, the cold once shaped everything. 
+	  Now the mountains are warming faster than the valleys below, reshuffling snow, water, 
+	  and life itself.
+      </strong></p>
     </div>
 
     <div class="hero-message hero-text">
-      <div class="wrap"><p><strong>Alpine ecosystems are simple by design — few 
-      species, delicate balances, narrow margins. That simplicity is their beauty, 
-      and their weakness. </strong></p></div>
+      <p><strong>Alpine ecosystems are simple by design 
+	  — few species, delicate balances, narrow margins. 
+	  That simplicity is their beauty, and their weakness.
+      </strong></p>
     </div>
 
     <div class="hero-message hero-text">
-      <div class="wrap"><p><strong>Yet within this simplicity lies surprising richness: 
-      the rugged topography fractures the landscape into various microhabitats creating high 
-      ecological diversity over very short distances.</strong></p></div>
+      <p><strong>Yet within this simplicity lies surprising richness: the rugged topography 
+	  fractures the landscape into various microhabitats creating high ecological diversity 
+	  over very short distances.
+      </strong></p>
     </div>
 
     <div class="hero-message hero-text">
-      <div class="wrap"><p><strong>As the climate warms, species climb toward the sky 
-      until the ridgelines stop them. Some may disappear as their world shrinks and 
-      they run out of mountain. </strong></p></div>
+      <p><strong>As the climate warms, species climb toward the sky until the ridgelines stop them. 
+	  Some may disappear as their world shrinks and they run out of mountain.
+      </strong></p>
     </div>
 
     <div class="hero-message hero-text">
-      <div class="wrap"><p><strong>The mountains are changing — and they are telling us what’s coming.</strong></p></div>
+      <p><strong>The mountains are changing<br> 
+	  — and they are telling us what’s coming.</strong></p>
     </div>
 
+    <!-- Large logo -->
     <div class="hero-message hero-text">
-      <img src="TPM_Logo2.png">
+      <img src=TPM_Logo2.png>
     </div>
 
-    <div class="hero-fade"></div>
-  </section>
+  </div>
+
+</section>
 
   <nav class="progress"></nav>
 
